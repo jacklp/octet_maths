@@ -222,7 +222,14 @@
     <None Include="..\..\resources\resources.inl" />
   </ItemGroup>
   <ItemGroup>
-    <Xml Include="xml\config.xml" />
+    <Xml Include="xml\config1.xml" />
+    <Xml Include="xml\config2.xml" />
+    <Xml Include="xml\config3.xml" />
+    <Xml Include="xml\config4.xml" />
+    <Xml Include="xml\config5.xml" />
+    <Xml Include="xml\config6.xml" />
+    <Xml Include="xml\config7.xml" />
+    <Xml Include="xml\config8.xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

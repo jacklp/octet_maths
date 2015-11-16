@@ -10,6 +10,7 @@ namespace octet {
 		// scene for drawing box
 		ref<visual_scene> app_scene;
 		vec3 currentPoint = vec3(0);
+		float currentAngle = 0.0f;
 
 		material *black;
 
@@ -22,6 +23,11 @@ namespace octet {
 		int max_increment_count;
 		std::string current_rule_set;
 		std::string axiom;
+		std::vector<std::pair<vec3, float>> stack;
+		float sceneHeightY;
+		std::string acceptableOperators = "[]-+";
+		int numBranches = 0;
+		float cameraZoomRatio = 0.0f;
 
 	public:
 
@@ -31,121 +37,138 @@ namespace octet {
 
 		/// this is called once OpenGL is initialized
 		void app_init() {
-			app_scene = new visual_scene();
-			app_scene->create_default_camera_and_lights();
+			
 			
 			black = new material(vec4(0, 0, 0, 1));
 			
 			//on load of new config repeat this:
 			reset_defaults();
-			load_assets_via_xml();
+			load_xml();
 
-
+			parse();
+			parse();
+			parse();
+			parse();
+			parse();
+			parse();
+			parse();
+			render();
+			
 			//on key press run the next increment
-			render_lines();
+			/*if (current_increment_count != max_increment_count){
+
+				//increment and update rule set
+				parse();
+
+				//increase the increment count by 1
+				current_increment_count++;
+			}*/
 
 		}
 
 		void reset_defaults(){
+			app_scene = new visual_scene();
+			app_scene->reset();
+			app_scene->create_default_camera_and_lights();
+			app_scene->get_camera_instance(0)->set_far_plane(100000000.0f);
 			rules.clear();
 			length = 1.0f;
 			width = 1.0f;
 			rotation = 90.0f;
 			current_increment_count = 0;
 			max_increment_count = 5;
+			numBranches = 0;
 		}
 
-		void render_lines(){
+		void render(){
+			//loop through the current rule set
 
-			// check if you have not reached the end of the increments configured.
-			if (current_increment_count != max_increment_count){
-				
-				// draw current rule set
-				draw_current_rule_set(currentPoint);
-				
-				//increment and update rule set
-				update_rule_set();
-				update_rule_set();
-				update_rule_set();
-				update_rule_set();
-				update_rule_set();
-				update_rule_set();
-				update_rule_set();
+			for (int i = 0; i < current_rule_set.size(); ++i){
+				char test = current_rule_set[i];
+				switch (test){
+				case 'F':
+					{
+						float halfSize = 1.0f;
+						mat4t mat = mat4t();
+						mat.loadIdentity();
+						mat.rotate(90.0f, 1, 0, 0);
 
-				//increase the increment count by 1
-				current_increment_count++;
+						//calculate curent section.
+						vec3 midPoint = currentPoint;
+						midPoint.x() = midPoint.x() + halfSize *cos((currentAngle + 90) * CL_M_PI / 180);
+						midPoint.y() = midPoint.y() + halfSize *sin((currentAngle + 90)* CL_M_PI / 180);
+
+						//calculate next section to be saved
+						vec3 endPoint = currentPoint;
+						endPoint.x() = endPoint.x() + 2.0f*halfSize *cos((currentAngle + 90) * CL_M_PI / 180);
+						endPoint.y() = endPoint.y() + 2.0f*halfSize *sin((currentAngle + 90) * CL_M_PI / 180);
+
+						//instantiate object and add to the scene
+						mesh_box *line = new mesh_box(vec3(0.2f, 0.1f, halfSize), mat);
+						scene_node *node = new scene_node();
+						app_scene->add_child(node);
+						app_scene->add_mesh_instance(new mesh_instance(node, line, black));
+						node->translate(midPoint);
+						node->rotate(currentAngle, vec3(0, 0, 1));
+						
+						if (endPoint.y() > sceneHeightY){
+							sceneHeightY = endPoint.y();
+							numBranches++;
+						}
+						
+						currentPoint = endPoint;
+						break;
+					}
+					case '[':
+						stack.push_back(std::pair<vec3, float>(currentPoint, currentAngle));
+						break;
+					case ']':
+						currentPoint = stack[stack.size() - 1].first;
+						currentAngle = stack[stack.size() - 1].second;
+						stack.pop_back();
+						stack.shrink_to_fit();
+						break;
+					case '+':
+						currentAngle += rotation;
+						break;
+					case '-':
+						currentAngle -= rotation;
+						break;
+					case 'X':
+						break;
+				}
 			}
 		}
 
-		void draw_current_rule_set(vec3 startingPoint)
-		{
+		void parse(){
 
-			//loop through the rules and 
-			float halfSize = -1.0f;
-
-			vec3 midPoint = startingPoint;
-			midPoint.z() = midPoint.z() + halfSize;
-
-			vec3 endPoint = startingPoint;
-			endPoint.z() = endPoint.z() + 2.0f*halfSize;
-			
-			mat4t mat = mat4t();
-			mat.loadIdentity();
-			mat.rotate(90.0f, 1, 0, 0);
-			
-			mesh_cylinder *line = new mesh_cylinder(zcylinder(midPoint, 0.1f, halfSize), mat);
-
-			scene_node *node = new scene_node();
-			app_scene->add_child(node);
-			app_scene->add_mesh_instance(new mesh_instance(node, line, black));
-
-		}
-
-		void update_rule_set(){
-
-			//loop through all of the rules and apply them to current_rule_set
-			typedef std::map<char, std::string>::iterator it_type;
-			for (it_type rule_it = rules.begin(); rule_it != rules.end(); ++rule_it){
-
-				//loop through a rule inside of the rules map and apply it to curent_rule_set
-				char needle = rule_it->first;
-				std::string rule = rule_it->second;
-				std::string::iterator str_it;
-
-				std::string current_rule_set_temp = current_rule_set;
-
-				for (int count = 0; count < current_rule_set.size(); ++count){
-					char haystack = current_rule_set[count];
-
-					//if key matches a value in our current rule set then replace it with the corresponding rule content
-					if (needle == haystack){
-
-						//remove the key and replace with rule
-						current_rule_set_temp.erase(count, 1);
-						current_rule_set_temp.insert(count, rule);
+			std::string current_rule_set_temp = "";
+			for (int count = 0; count <= current_rule_set.size(); ++count){
+				boolean match = false;
+				typedef std::map<char, std::string>::iterator it_type;
+				for (it_type rule_it = rules.begin(); rule_it != rules.end(); ++rule_it){
+					if (rule_it->first == current_rule_set[count] && match != true){
+						current_rule_set_temp += rule_it->second;
+						match = true;
+					}
+					else{
+						for (int i = 0; i <= acceptableOperators.size(); ++i){
+							if (current_rule_set[count] == acceptableOperators[i] && match != true){
+								current_rule_set_temp += current_rule_set[count];
+								match = true;
+							}
+						}
 					}
 				}
-				current_rule_set = current_rule_set_temp;
 			}
-			printf("%s", current_rule_set);
+			current_rule_set = current_rule_set_temp;
 		}
 
-		TiXmlDocument load_xml() {
-			TiXmlDocument doc("xml/config.xml");
-			GLboolean loadOkay = doc.LoadFile();
+		void load_xml() {
 
-			if (loadOkay) {
-				return doc;
-			}
-			else {
-				return false;
-			}
+			TiXmlDocument doc("xml/config1.xml");
+			doc.LoadFile();
 
-		}
-
-		void load_assets_via_xml() {
-
-			TiXmlDocument doc = load_xml();
 			TiXmlElement *parameters, *parameter;
 
 			parameters = doc.FirstChildElement("parameters");
@@ -169,7 +192,7 @@ namespace octet {
 						std::string::size_type sz;
 						width = std::stof(text, &sz);
 					}
-					else if (type == "rotation"){
+					else if (type == "angle"){
 						std::string text = string(parameter->GetText(), sizeof(parameter->GetText()));
 						std::string::size_type sz;
 						rotation = std::stof(text, &sz);
@@ -211,6 +234,9 @@ namespace octet {
 			// draw the scene
 			app_scene->render((float)vx / vy);
 
+			//app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, sceneHeightY / 2, 1.0f * numBranches));
+
+			vec3 cameraPos = app_scene->get_camera_instance(0)->get_node()->get_position();
 		}
 	};
 }

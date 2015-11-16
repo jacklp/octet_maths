@@ -441,7 +441,28 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Xml Include="xml\config.xml">
+    <Xml Include="xml\config1.xml">
+      <Filter>xml</Filter>
+    </Xml>
+    <Xml Include="xml\config2.xml">
+      <Filter>xml</Filter>
+    </Xml>
+    <Xml Include="xml\config3.xml">
+      <Filter>xml</Filter>
+    </Xml>
+    <Xml Include="xml\config4.xml">
+      <Filter>xml</Filter>
+    </Xml>
+    <Xml Include="xml\config5.xml">
+      <Filter>xml</Filter>
+    </Xml>
+    <Xml Include="xml\config6.xml">
+      <Filter>xml</Filter>
+    </Xml>
+    <Xml Include="xml\config7.xml">
+      <Filter>xml</Filter>
+    </Xml>
+    <Xml Include="xml\config8.xml">
       <Filter>xml</Filter>
     </Xml>
   </ItemGroup>
