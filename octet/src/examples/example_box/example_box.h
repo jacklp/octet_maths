@@ -14,20 +14,20 @@ namespace octet {
 
 		material *black;
 
-		//All the variables I need
 		std::map<char, std::string> rules;
-		float length;
-		float width;
-		float rotation;
-		int current_increment_count;
-		int max_increment_count;
+		float length = 0.5f;
+		float width = 1.0f;
+		float rotation = 15.0f;
+		float current_increment_count = 1.0f;
+		int max_increment_count = 5;
 		std::string current_rule_set;
 		std::string axiom;
 		std::vector<std::pair<vec3, float>> stack;
-		float sceneHeightY;
+		float sceneHeightY = 0.0f;
 		std::string acceptableOperators = "[]-+";
 		int numBranches = 0;
 		float cameraZoomRatio = 0.0f;
+		string docNum = "1";
 
 	public:
 
@@ -38,46 +38,19 @@ namespace octet {
 		/// this is called once OpenGL is initialized
 		void app_init() {
 			
-			
 			black = new material(vec4(0, 0, 0, 1));
-			
-			//on load of new config repeat this:
-			reset_defaults();
+			reset();
 			load_xml();
-
-			parse();
-			parse();
-			parse();
-			parse();
-			parse();
-			parse();
-			parse();
-			render();
-			
-			//on key press run the next increment
-			/*if (current_increment_count != max_increment_count){
-
-				//increment and update rule set
-				parse();
-
-				//increase the increment count by 1
-				current_increment_count++;
-			}*/
-
 		}
 
-		void reset_defaults(){
+		void reset(){
 			app_scene = new visual_scene();
-			app_scene->reset();
 			app_scene->create_default_camera_and_lights();
-			app_scene->get_camera_instance(0)->set_far_plane(100000000.0f);
-			rules.clear();
-			length = 1.0f;
-			width = 1.0f;
-			rotation = 90.0f;
-			current_increment_count = 0;
-			max_increment_count = 5;
-			numBranches = 0;
+			app_scene->get_camera_instance(0)->get_node()->translate(vec3(0.0f, 0.0f, 2.0f));
+			app_scene->get_camera_instance(0)->set_far_plane(100000.0f);
+			currentPoint = vec3(0);
+			sceneHeightY = 0.0f;
+			current_increment_count = 1;
 		}
 
 		void render(){
@@ -88,34 +61,33 @@ namespace octet {
 				switch (test){
 				case 'F':
 					{
-						float halfSize = 1.0f;
-						mat4t mat = mat4t();
-						mat.loadIdentity();
-						mat.rotate(90.0f, 1, 0, 0);
-
+						
 						//calculate curent section.
 						vec3 midPoint = currentPoint;
-						midPoint.x() = midPoint.x() + halfSize *cos((currentAngle + 90) * CL_M_PI / 180);
-						midPoint.y() = midPoint.y() + halfSize *sin((currentAngle + 90)* CL_M_PI / 180);
+						midPoint.x() = currentPoint.x() + length *cos((currentAngle + 90) * CL_M_PI / 180);
+						midPoint.y() = currentPoint.y() + length *sin((currentAngle + 90)* CL_M_PI / 180);
 
 						//calculate next section to be saved
 						vec3 endPoint = currentPoint;
-						endPoint.x() = endPoint.x() + 2.0f*halfSize *cos((currentAngle + 90) * CL_M_PI / 180);
-						endPoint.y() = endPoint.y() + 2.0f*halfSize *sin((currentAngle + 90) * CL_M_PI / 180);
+						endPoint.x() = currentPoint.x() + 2.0f*length *cos((currentAngle + 90) * CL_M_PI / 180);
+						endPoint.y() = currentPoint.y() + 2.0f*length *sin((currentAngle + 90) * CL_M_PI / 180);
 
-						//instantiate object and add to the scene
-						mesh_box *line = new mesh_box(vec3(0.2f, 0.1f, halfSize), mat);
-						scene_node *node = new scene_node();
-						app_scene->add_child(node);
-						app_scene->add_mesh_instance(new mesh_instance(node, line, black));
-						node->translate(midPoint);
-						node->rotate(currentAngle, vec3(0, 0, 1));
-						
 						if (endPoint.y() > sceneHeightY){
 							sceneHeightY = endPoint.y();
-							numBranches++;
 						}
-						
+
+						//configure matrix
+						mat4t mat = mat4t();
+						mat.loadIdentity();
+						mat.translate(midPoint);
+						mat.rotate(currentAngle, 0.0f, 0.0f, 1.0f);
+
+						//configure box
+						mesh_box *box = new mesh_box(vec3(width, length, width), mat);
+						scene_node *node = new scene_node();
+						app_scene->add_child(node);
+						app_scene->add_mesh_instance(new mesh_instance(node, box, black));
+			
 						currentPoint = endPoint;
 						break;
 					}
@@ -138,7 +110,8 @@ namespace octet {
 						break;
 				}
 			}
-		}
+			current_increment_count++;
+			}
 
 		void parse(){
 
@@ -164,9 +137,23 @@ namespace octet {
 			current_rule_set = current_rule_set_temp;
 		}
 
+		string get_path(){
+
+			string result = "xml/config";
+			result.insert(10, docNum);
+			result.truncate(11);
+			string post = ".xml";
+			result.insert(11, post);
+			result.truncate(15);
+			
+			return result;
+		}
+
 		void load_xml() {
 
-			TiXmlDocument doc("xml/config1.xml");
+			rules.clear();
+			string path = get_path();
+			TiXmlDocument doc(path);
 			doc.LoadFile();
 
 			TiXmlElement *parameters, *parameter;
@@ -222,21 +209,52 @@ namespace octet {
 			}
 		}
 		
+		void input(){
+
+			if (is_key_going_down(key_up)) {
+				reset();
+				parse();
+				render();
+				camera();
+			}
+			if (is_key_going_down(key_down)){
+				//need to make parse work backwards.
+			}
+			if (is_key_going_down(key_right)){
+				if (docNum[0] != max_increment_count){
+					docNum[0]++;
+					load_xml();
+				}
+			}
+			if (is_key_going_down(key_left)){
+				if (docNum[0] != 1){
+					docNum[0]--;
+					load_xml();
+				}
+			}
+		}
+
+		void camera(){
+
+			float padding = pow(current_increment_count, 2.5);
+			app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, sceneHeightY / 2, sceneHeightY + padding));
+			
+		}
+
 		/// this is called to draw the world
 		void draw_world(int x, int y, int w, int h) {
-			int vx = 0, vy = 0;
-			get_viewport_size(vx, vy);
-			app_scene->begin_render(vx, vy);
+
+			input();
+
+			app_scene->begin_render(w, h);
 
 			// update matrices. assume 30 fps.
-			app_scene->update(1.0f / 30);
+			app_scene->update(1.0f / 30.0f);
 
 			// draw the scene
-			app_scene->render((float)vx / vy);
+			app_scene->render((float)w / h);
 
-			//app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, sceneHeightY / 2, 1.0f * numBranches));
-
-			vec3 cameraPos = app_scene->get_camera_instance(0)->get_node()->get_position();
+			
 		}
 	};
 }

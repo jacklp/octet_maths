@@ -87,6 +87,14 @@ namespace octet { namespace scene {
       is_ortho = false;
     }
 
+	float get_yfov(){
+		return yfov;
+	}
+
+	void set_yfov(float newyfov){
+		yfov = newyfov;
+	}
+
     /// set the parameters as in the collada ortho element
     void set_ortho(float xmag, float ymag, float aspect_ratio, float n, float f)
     {
