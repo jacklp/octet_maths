@@ -1,9 +1,9 @@
 <?xml version="1.0" ?>
 <parameters>
-  <parameter type="length">0.5</parameter>
+  <parameter type="length">0.2</parameter>
   <parameter type="width">0.1</parameter>
-  <parameter type="angle">15.0</parameter>
+  <parameter type="angle">25.0</parameter>
   <parameter type="axiom">F</parameter>
-  <parameter type="inc">5</parameter>
-  <parameter type="rule" size="14">F->F[+F]F[-F]F</parameter>
+  <parameter type="inc">3</parameter>
+  <parameter type="rule" size="23">F->F[+F][-F[-F]F]F[+F][-F]</parameter>
 </parameters>

@@ -1,10 +1,10 @@
 <?xml version="1.0" ?>
 <parameters>
-  <parameter type="length">0.5</parameter>
-  <parameter type="width">0.1</parameter>
-  <parameter type="angle">15.0</parameter>
+  <parameter type="length">0.3</parameter>
+  <parameter type="width">0.2</parameter>
+  <parameter type="angle">20.0</parameter>
   <parameter type="axiom">X</parameter>
-  <parameter type="inc">5</parameter>
-  <parameter type="rule" size="15">X->F[+X]F[-X]+X</parameter>
+  <parameter type="inc">7</parameter>
+  <parameter type="rule" size="16">X->F[+X]F[-X]+X</parameter>
   <parameter type="rule" size="5">F->FF</parameter>
 </parameters>

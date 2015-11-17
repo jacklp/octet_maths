@@ -18,7 +18,7 @@ namespace octet {
 		float length = 0.5f;
 		float width = 1.0f;
 		float rotation = 15.0f;
-		float current_increment_count = 1.0f;
+		float current_increment_count = 0.0f;
 		int max_increment_count = 5;
 		std::string current_rule_set;
 		std::string axiom;
@@ -49,8 +49,8 @@ namespace octet {
 			app_scene->get_camera_instance(0)->get_node()->translate(vec3(0.0f, 0.0f, 2.0f));
 			app_scene->get_camera_instance(0)->set_far_plane(100000.0f);
 			currentPoint = vec3(0);
+			currentAngle = 0.0f;
 			sceneHeightY = 0.0f;
-			current_increment_count = 1;
 		}
 
 		void render(){
@@ -83,7 +83,7 @@ namespace octet {
 						mat.rotate(currentAngle, 0.0f, 0.0f, 1.0f);
 
 						//configure box
-						mesh_box *box = new mesh_box(vec3(width, length, width), mat);
+						mesh_box *box = new mesh_box(vec3(width, length, width + float(current_increment_count/5)), mat);
 						scene_node *node = new scene_node();
 						app_scene->add_child(node);
 						app_scene->add_mesh_instance(new mesh_instance(node, box, black));
@@ -110,7 +110,7 @@ namespace octet {
 						break;
 				}
 			}
-			current_increment_count++;
+			
 			}
 
 		void parse(){
@@ -212,23 +212,35 @@ namespace octet {
 		void input(){
 
 			if (is_key_going_down(key_up)) {
-				reset();
-				parse();
-				render();
-				camera();
+				if (current_increment_count < max_increment_count && current_increment_count >= 0.0f){
+					current_increment_count++;
+					reset();
+					parse();
+					render();
+					camera();
+				}
 			}
 			if (is_key_going_down(key_down)){
+				if (current_increment_count <= max_increment_count && current_increment_count > 0.0f){
+					current_increment_count--;
+					reset();
+					parse();
+					render();
+					camera();
+				}
 				//need to make parse work backwards.
 			}
 			if (is_key_going_down(key_right)){
-				if (docNum[0] != max_increment_count){
+				if (docNum[0] != 9){
 					docNum[0]++;
+					current_increment_count = 0.0f;
 					load_xml();
 				}
 			}
 			if (is_key_going_down(key_left)){
 				if (docNum[0] != 1){
 					docNum[0]--;
+					current_increment_count = 0.0f;
 					load_xml();
 				}
 			}
