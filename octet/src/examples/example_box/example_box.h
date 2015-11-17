@@ -20,7 +20,6 @@ namespace octet {
 		float rotation = 15.0f;
 		float current_increment_count = 0.0f;
 		int max_increment_count = 5;
-		std::string current_rule_set;
 		std::string axiom;
 		std::vector<std::pair<vec3, float>> stack;
 		float sceneHeightY = 0.0f;
@@ -28,6 +27,7 @@ namespace octet {
 		int numBranches = 0;
 		float cameraZoomRatio = 0.0f;
 		string docNum = "1";
+		std::vector<std::string> increment_vector;
 
 	public:
 
@@ -41,6 +41,7 @@ namespace octet {
 			black = new material(vec4(0, 0, 0, 1));
 			reset();
 			load_xml();
+			parse();
 		}
 
 		void reset(){
@@ -56,8 +57,8 @@ namespace octet {
 		void render(){
 			//loop through the current rule set
 
-			for (int i = 0; i < current_rule_set.size(); ++i){
-				char test = current_rule_set[i];
+			for (int i = 0; i < increment_vector[current_increment_count].size(); ++i){
+				char test = increment_vector[current_increment_count][i];
 				switch (test){
 				case 'F':
 					{
@@ -83,7 +84,7 @@ namespace octet {
 						mat.rotate(currentAngle, 0.0f, 0.0f, 1.0f);
 
 						//configure box
-						mesh_box *box = new mesh_box(vec3(width, length, width + float(current_increment_count/5)), mat);
+						mesh_box *box = new mesh_box(vec3(width, length, width), mat);
 						scene_node *node = new scene_node();
 						app_scene->add_child(node);
 						app_scene->add_mesh_instance(new mesh_instance(node, box, black));
@@ -115,26 +116,29 @@ namespace octet {
 
 		void parse(){
 
-			std::string current_rule_set_temp = "";
-			for (int count = 0; count <= current_rule_set.size(); ++count){
-				boolean match = false;
-				typedef std::map<char, std::string>::iterator it_type;
-				for (it_type rule_it = rules.begin(); rule_it != rules.end(); ++rule_it){
-					if (rule_it->first == current_rule_set[count] && match != true){
-						current_rule_set_temp += rule_it->second;
-						match = true;
-					}
-					else{
-						for (int i = 0; i <= acceptableOperators.size(); ++i){
-							if (current_rule_set[count] == acceptableOperators[i] && match != true){
-								current_rule_set_temp += current_rule_set[count];
-								match = true;
+			//get everything in to a increment vector
+			for (int increment = 1; increment <= max_increment_count; increment++){
+				std::string current_rule_set_temp = "";
+				for (int count = 0; count <= increment_vector[increment-1].size(); ++count){
+					boolean match = false;
+					typedef std::map<char, std::string>::iterator it_type;
+					for (it_type rule_it = rules.begin(); rule_it != rules.end(); ++rule_it){
+						if (rule_it->first == increment_vector[increment-1][count] && match != true){
+							current_rule_set_temp += rule_it->second;
+							match = true;
+						}
+						else{
+							for (int i = 0; i <= acceptableOperators.size(); ++i){
+								if (increment_vector[increment-1][count] == acceptableOperators[i] && match != true){
+									current_rule_set_temp += increment_vector[increment - 1][count];
+									match = true;
+								}
 							}
 						}
 					}
 				}
+				increment_vector.push_back(std::string(current_rule_set_temp));
 			}
-			current_rule_set = current_rule_set_temp;
 		}
 
 		string get_path(){
@@ -152,6 +156,7 @@ namespace octet {
 		void load_xml() {
 
 			rules.clear();
+			increment_vector.clear();
 			string path = get_path();
 			TiXmlDocument doc(path);
 			doc.LoadFile();
@@ -189,15 +194,13 @@ namespace octet {
 						unsigned int intValue;
 						std::stringstream s(parameter->Attribute("size"));
 						s >> intValue;
-
 						std::string text = string(parameter->GetText(), intValue);
-
 						char pre = text.substr(0, text.find_first_of("->"))[0];
 						std::string post = text.substr(text.find_first_of("->") + 2, text.size());
 						rules[pre] = post;
 					}
 					else if (type == "axiom"){
-						current_rule_set = std::string(parameter->GetText(), sizeof(parameter->GetText()));
+						increment_vector.push_back(std::string(parameter->GetText(), sizeof(parameter->GetText())));
 					}
 					else if (type == "inc"){
 						std::stringstream s(parameter->GetText());
@@ -215,7 +218,6 @@ namespace octet {
 				if (current_increment_count < max_increment_count && current_increment_count >= 0.0f){
 					current_increment_count++;
 					reset();
-					parse();
 					render();
 					camera();
 				}
@@ -224,24 +226,25 @@ namespace octet {
 				if (current_increment_count <= max_increment_count && current_increment_count > 0.0f){
 					current_increment_count--;
 					reset();
-					parse();
 					render();
 					camera();
 				}
 				//need to make parse work backwards.
 			}
 			if (is_key_going_down(key_right)){
-				if (docNum[0] != 9){
+				if (docNum[0] != '9'){
 					docNum[0]++;
 					current_increment_count = 0.0f;
 					load_xml();
+					parse();
 				}
 			}
 			if (is_key_going_down(key_left)){
-				if (docNum[0] != 1){
+				if (docNum[0] != '1'){
 					docNum[0]--;
 					current_increment_count = 0.0f;
 					load_xml();
+					parse();
 				}
 			}
 		}
