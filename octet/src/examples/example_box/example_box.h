@@ -21,9 +21,44 @@ namespace octet {
 		material *leaf;
 		material *wood;
 
+		material *andy;
+
+		std::string current_rule_set_temp;
+
 		class random randomizer;
 
-		std::map<char, std::string> rules;
+		/*
+		
+		stochastic rule container format:
+		example from config1.xml:
+
+		{} = map
+		[] = vector
+
+		{	
+			F:[
+				{ 
+					F: 'FF'
+				}
+			},
+			X:[
+				{
+					X: 'F[+X][-X]FX'
+				},
+				{
+					X: 'F-[[X]+X]+F[+FX]-X'
+				},
+				{
+					X: 'F[+X]F[-X]+X'
+				},
+				{
+					X: 'X->FF'
+				}
+			]
+		}
+		*/
+		std::map<char, std::vector<std::map<char, std::string>>> stochastic_rule_container;
+
 		float length = 0.5f;
 		float width = 1.0f;
 		float rotation = 15.0f;
@@ -168,18 +203,27 @@ namespace octet {
 
 			//get everything in to a increment vector
 			for (int increment = 1; increment <= max_increment_count; increment++){
-				std::string current_rule_set_temp = "";
+				current_rule_set_temp.clear();
+
 				for (int count = 0; count <= increment_vector[increment-1].size(); ++count){
 					boolean match = false;
-					typedef std::map<char, std::string>::iterator it_type;
-					for (it_type rule_it = rules.begin(); rule_it != rules.end(); ++rule_it){
-						if (rule_it->first == increment_vector[increment-1][count] && match != true){
+
+					typedef std::map<char, std::vector<std::map<char,std::string>>>::iterator sto_it;
+					for (sto_it rules_it = stochastic_rule_container.begin(); rules_it != stochastic_rule_container.end(); ++rules_it){
+						
+						if (rules_it->first == increment_vector[increment - 1][count] && match != true){
+							std::vector<std::map<char, std::string>> test = rules_it->second;
+							int ruleIndex = randomizer.get(0, test.size()-1);
+							std::map<char, std::string> rule = test[ruleIndex];
+							std::map<char, std::string>::iterator rule_it;
+							rule_it = rule.begin();
 							current_rule_set_temp += rule_it->second;
 							match = true;
+
 						}
-						else{
+						else {
 							for (int i = 0; i <= acceptableOperators.size(); ++i){
-								if (increment_vector[increment-1][count] == acceptableOperators[i] && match != true){
+								if (increment_vector[increment - 1][count] == acceptableOperators[i] && match != true){
 									current_rule_set_temp += increment_vector[increment - 1][count];
 									match = true;
 								}
@@ -187,7 +231,8 @@ namespace octet {
 						}
 					}
 				}
-				increment_vector.push_back(std::string(current_rule_set_temp));
+				
+				increment_vector.push_back(current_rule_set_temp);
 			}
 		}
 
@@ -204,8 +249,11 @@ namespace octet {
 		}
 
 		void load_xml() {
+			stochastic_rule_container.clear();
 
-			rules.clear();
+			for (int c = 0; c < increment_vector.size(); ++c){
+				increment_vector[c].clear();
+			}
 			increment_vector.clear();
 			string path = get_path();
 			TiXmlDocument doc(path);
@@ -245,9 +293,26 @@ namespace octet {
 						std::stringstream s(parameter->Attribute("size"));
 						s >> intValue;
 						std::string text = string(parameter->GetText(), intValue);
+
 						char pre = text.substr(0, text.find_first_of("->"))[0];
 						std::string post = text.substr(text.find_first_of("->") + 2, text.size());
-						rules[pre] = post;
+
+						//if there is already an axiom value in our stochastic rule array then add it in there.
+						if (stochastic_rule_container.count(pre) == 1){
+							std::vector<std::map<char, std::string>> rules = stochastic_rule_container[pre];
+							std::map<char, std::string> rule;
+							rule[pre] = post;
+							rules.push_back(rule);
+							stochastic_rule_container[pre] = rules;
+						}
+						else {
+							std::vector<std::map<char, std::string>> rules;
+							std::map<char, std::string> rule;
+							rule[pre] = post;
+							rules.push_back(rule);
+							stochastic_rule_container[pre] = rules;
+						}
+						
 					}
 					else if (type == "axiom"){
 						increment_vector.push_back(std::string(parameter->GetText(), sizeof(parameter->GetText())));
