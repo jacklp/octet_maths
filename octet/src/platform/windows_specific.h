@@ -223,6 +223,7 @@ namespace octet {
 
     static unsigned translate(unsigned key) {
       switch (key) {
+
         case VK_SHIFT: return key_shift;
         case VK_CONTROL: return key_ctrl;
         case VK_MENU: return key_alt;

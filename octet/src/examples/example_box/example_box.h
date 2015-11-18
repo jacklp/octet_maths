@@ -13,6 +13,15 @@ namespace octet {
 		float currentAngle = 0.0f;
 
 		material *black;
+		
+		material *red;
+		material *blue;
+		material *green;
+
+		material *leaf;
+		material *wood;
+
+		class random randomizer;
 
 		std::map<char, std::string> rules;
 		float length = 0.5f;
@@ -28,6 +37,7 @@ namespace octet {
 		float cameraZoomRatio = 0.0f;
 		string docNum = "1";
 		std::vector<std::string> increment_vector;
+		int mode = 0;
 
 	public:
 
@@ -39,6 +49,14 @@ namespace octet {
 		void app_init() {
 			
 			black = new material(vec4(0, 0, 0, 1));
+
+			wood = new material(vec4(0.4f, 0.1f, 0.05f, 1.0f));
+			leaf = new material(vec4(0.1f, 0.2f, 0.01f, 1.0f));
+
+			red = new material(vec4(1, 0, 0, 1));
+			green = new material(vec4(0, 1, 0, 1));
+			blue = new material(vec4(0, 0, 1, 1));
+
 			reset();
 			load_xml();
 			parse();
@@ -87,7 +105,40 @@ namespace octet {
 						mesh_box *box = new mesh_box(vec3(width, length, width), mat);
 						scene_node *node = new scene_node();
 						app_scene->add_child(node);
-						app_scene->add_mesh_instance(new mesh_instance(node, box, black));
+						
+
+						switch (mode){
+							case 0:
+								if (increment_vector[current_increment_count][i + 1] == ']'){
+									app_scene->add_mesh_instance(new mesh_instance(node, box, leaf));
+								}
+								else {
+									app_scene->add_mesh_instance(new mesh_instance(node, box, wood));
+								}
+								break;
+							case 1:
+							{
+								int test = randomizer.get(0, 3);
+
+								switch (test){
+									case 0:
+										app_scene->add_mesh_instance(new mesh_instance(node, box, red));
+										break;
+									case 1:
+										app_scene->add_mesh_instance(new mesh_instance(node, box, blue));
+										break;
+									case  2:
+										app_scene->add_mesh_instance(new mesh_instance(node, box, green));
+										break;
+								}
+								break;
+							}
+							case 2:
+								app_scene->add_mesh_instance(new mesh_instance(node, box, black));
+								break;
+								
+						}
+						
 			
 						currentPoint = endPoint;
 						break;
@@ -110,9 +161,8 @@ namespace octet {
 					case 'X':
 						break;
 				}
-			}
-			
-			}
+			}	
+		}
 
 		void parse(){
 
@@ -214,6 +264,7 @@ namespace octet {
 		
 		void input(){
 
+			//go through increments
 			if (is_key_going_down(key_up)) {
 				if (current_increment_count < max_increment_count && current_increment_count >= 0.0f){
 					current_increment_count++;
@@ -229,8 +280,9 @@ namespace octet {
 					render();
 					camera();
 				}
-				//need to make parse work backwards.
 			}
+
+			//loop through config files
 			if (is_key_going_down(key_right)){
 				if (docNum[0] != '9'){
 					docNum[0]++;
@@ -245,6 +297,70 @@ namespace octet {
 					current_increment_count = 0.0f;
 					load_xml();
 					parse();
+				}
+			}
+
+			//increase angle 
+			if (is_key_going_down(key_f1)){
+				rotation = rotation - 2.0f;
+				reset();
+				render();
+				camera();
+			}
+			// decrease angle
+			if (is_key_going_down(key_f2)){
+				rotation = rotation + 2.0f;
+				reset();
+				render();
+				camera();
+			}
+			// increase width
+			if (is_key_going_down(key_f3)){
+				width = width - 0.02f;
+				reset();
+				render();
+				camera();
+			}
+			//decrease width
+			if (is_key_going_down(key_f4)){
+				width = width + 0.02f;
+				reset();
+				render();
+				camera();
+			}
+
+			// increase length
+			if (is_key_going_down(key_f5)){
+				length = length - 0.02f;
+				reset();
+				render();
+				camera();
+			}
+			//decrease length
+			if (is_key_going_down(key_f6)){
+				length = length + 0.02f;
+				reset();
+				render();
+				camera();
+			}
+
+			//decrease mode
+			if (is_key_going_down(key_f7)){
+				if (mode > 0){
+					mode--;
+					reset();
+					render();
+					camera();
+				}
+			}
+
+			//increase mode
+			if (is_key_going_down(key_f8)){
+				if (mode < 2){
+					mode++;
+					reset();
+					render();
+					camera();
 				}
 			}
 		}
