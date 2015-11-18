@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <parameters>
-  <parameter type="length">0.2</parameter>
+  <parameter type="length">0.7</parameter>
   <parameter type="width">0.1</parameter>
   <parameter type="angle">25.0</parameter>
   <parameter type="axiom">F</parameter>
