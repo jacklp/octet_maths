@@ -5,42 +5,41 @@
 #include <sstream>
 
 namespace octet {
-	/// Scene containing a box with octet.
+	
 	class example_box : public app {
-		// scene for drawing box
+		
 		ref<visual_scene> app_scene;
 		vec3 currentPoint = vec3(0);
-		float currentAngle = 0.0f;
+		class random randomizer;
 
 		material *black;
-		
 		material *red;
 		material *blue;
 		material *green;
-
 		material *leaf;
 		material *wood;
-
 		material *andy;
 
-		std::string current_rule_set_temp;
+		float currentAngle = 0.0f;
+		float length = 0.5f;
+		float width = 1.0f;
+		float rotation = 15.0f;
+		float current_increment_count = 0.0f;
+		float cameraZoomRatio = 0.0f;
+		float sceneHeightY = 0.0f;
 
-		class random randomizer;
+		int max_increment_count = 5;
+		int numBranches = 0;
+		int mode = 0;
 
 		/*
-		
-		stochastic rule container format:
-		example from config1.xml:
-
-		{} = map
-		[] = vector
 
 		{	
 			F:[
 				{ 
 					F: 'FF'
 				}
-			},
+			],
 			X:[
 				{
 					X: 'F[+X][-X]FX'
@@ -57,22 +56,16 @@ namespace octet {
 			]
 		}
 		*/
-		std::map<char, std::vector<std::map<char, std::string>>> stochastic_rule_container;
-
-		float length = 0.5f;
-		float width = 1.0f;
-		float rotation = 15.0f;
-		float current_increment_count = 0.0f;
-		int max_increment_count = 5;
+		
+		std::string current_rule_set_temp;
 		std::string axiom;
-		std::vector<std::pair<vec3, float>> stack;
-		float sceneHeightY = 0.0f;
 		std::string acceptableOperators = "[]-+";
-		int numBranches = 0;
-		float cameraZoomRatio = 0.0f;
 		string docNum = "1";
+
+		std::map<char, std::vector<std::map<char, std::string>>> stochastic_rule_container;
+		std::vector<std::pair<vec3, float>> stack;
 		std::vector<std::string> increment_vector;
-		int mode = 0;
+		
 
 	public:
 
