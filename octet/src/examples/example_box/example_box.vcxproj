@@ -236,7 +236,6 @@
     <Xml Include="xml\config8.xml">
       <SubType>Designer</SubType>
     </Xml>
-    <Xml Include="xml\config9.xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -465,8 +465,5 @@
     <Xml Include="xml\config8.xml">
       <Filter>xml</Filter>
     </Xml>
-    <Xml Include="xml\config9.xml">
-      <Filter>xml</Filter>
-    </Xml>
   </ItemGroup>
 </Project>

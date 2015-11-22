@@ -11,6 +11,8 @@ namespace octet {
 		ref<visual_scene> app_scene;
 		vec3 currentPoint = vec3(0);
 		class random randomizer;
+		ref<text_overlay> text;
+		ref<mesh_text> text_texture;
 
 		material *black;
 		material *red;
@@ -24,10 +26,10 @@ namespace octet {
 		float length = 0.5f;
 		float width = 1.0f;
 		float rotation = 15.0f;
-		float current_increment_count = 0.0f;
 		float cameraZoomRatio = 0.0f;
 		float sceneHeightY = 0.0f;
 
+		int current_increment_count = 0;
 		int max_increment_count = 5;
 		int numBranches = 0;
 		int mode = 0;
@@ -77,13 +79,16 @@ namespace octet {
 		void app_init() {
 			
 			black = new material(vec4(0, 0, 0, 1));
-
 			wood = new material(vec4(0.4f, 0.1f, 0.05f, 1.0f));
 			leaf = new material(vec4(0.1f, 0.2f, 0.01f, 1.0f));
-
 			red = new material(vec4(1, 0, 0, 1));
 			green = new material(vec4(0, 1, 0, 1));
 			blue = new material(vec4(0, 0, 1, 1));
+
+			aabb bb(vec3(144.5f, 305.0f, 0.0f), vec3(256, 64, 0));
+			text = new text_overlay();
+			text_texture = new mesh_text(text->get_default_font(), "", &bb);
+			text->add_mesh_text(text_texture);
 
 			reset();
 			load_xml();
@@ -324,7 +329,7 @@ namespace octet {
 
 			//go through increments
 			if (is_key_going_down(key_up)) {
-				if (current_increment_count < max_increment_count && current_increment_count >= 0.0f){
+				if (current_increment_count < max_increment_count && current_increment_count >= 0){
 					current_increment_count++;
 					reset();
 					render();
@@ -332,7 +337,7 @@ namespace octet {
 				}
 			}
 			if (is_key_going_down(key_down)){
-				if (current_increment_count <= max_increment_count && current_increment_count > 0.0f){
+				if (current_increment_count <= max_increment_count && current_increment_count > 0){
 					current_increment_count--;
 					reset();
 					render();
@@ -342,9 +347,9 @@ namespace octet {
 
 			//loop through config files
 			if (is_key_going_down(key_right)){
-				if (docNum[0] != '9'){
+				if (docNum[0] != '8'){
 					docNum[0]++;
-					current_increment_count = 0.0f;
+					current_increment_count = 0;
 					load_xml();
 					parse();
 				}
@@ -352,7 +357,7 @@ namespace octet {
 			if (is_key_going_down(key_left)){
 				if (docNum[0] != '1'){
 					docNum[0]--;
-					current_increment_count = 0.0f;
+					current_increment_count = 0;
 					load_xml();
 					parse();
 				}
@@ -430,19 +435,37 @@ namespace octet {
 			
 		}
 
-		/// this is called to draw the world
+		void render_text(int vx, int vy)
+		{
+			text_texture->clear();
+
+			string path_text = get_path();
+
+			text_texture->format(
+				"Current File: %s\n"
+				"Current Iteration: %i\n",
+				path_text,
+				current_increment_count
+				);
+
+			text_texture->update();
+			
+			text->render(vx, vy);
+		}
+
 		void draw_world(int x, int y, int w, int h) {
 
+			int vx = 0, vy = 0;
+			get_viewport_size(vx, vy);
 			input();
 
 			app_scene->begin_render(w, h);
 
-			// update matrices. assume 30 fps.
 			app_scene->update(1.0f / 30.0f);
 
-			// draw the scene
 			app_scene->render((float)w / h);
 
+			render_text(vx, vy);
 			
 		}
 	};
