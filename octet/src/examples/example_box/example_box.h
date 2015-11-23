@@ -85,7 +85,7 @@ namespace octet {
 			green = new material(vec4(0, 1, 0, 1));
 			blue = new material(vec4(0, 0, 1, 1));
 
-			aabb bb(vec3(144.5f, 305.0f, 0.0f), vec3(256, 64, 0));
+			aabb bb(vec3(-100.0f, 305.0f, 0.0f), vec3(256, 64, 0));
 			text = new text_overlay();
 			text_texture = new mesh_text(text->get_default_font(), "", &bb);
 			text->add_mesh_text(text_texture);
