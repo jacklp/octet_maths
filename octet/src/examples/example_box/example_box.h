@@ -33,9 +33,15 @@ namespace octet {
 		int max_increment_count = 5;
 		int numBranches = 0;
 		int mode = 0;
+		
+		std::string current_rule_set_temp;
+		std::string axiom;
+		std::string acceptableOperators = "[]-+";
+		string docNum = "1";
 
+		std::map<char, std::vector<std::map<char, std::string>>> stochastic_rule_container;
 		/*
-
+		Stochastic rule container format:
 		{	
 			F:[
 				{ 
@@ -58,13 +64,7 @@ namespace octet {
 			]
 		}
 		*/
-		
-		std::string current_rule_set_temp;
-		std::string axiom;
-		std::string acceptableOperators = "[]-+";
-		string docNum = "1";
 
-		std::map<char, std::vector<std::map<char, std::string>>> stochastic_rule_container;
 		std::vector<std::pair<vec3, float>> stack;
 		std::vector<std::string> increment_vector;
 		
